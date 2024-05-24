@@ -166,76 +166,102 @@ bool xmrig::CpuWorker<N>::selfTest()
 
     allocateCnCtx();
 
+    bool allTestsPassed = true;
+
 #   ifdef XMRIG_ALGO_GHOSTRIDER
     if (m_algorithm.family() == Algorithm::GHOSTRIDER) {
-        return (N == 8) && verify(Algorithm::GHOSTRIDER_RTM, test_output_gr);
+        allTestsPassed &= (N == 8) && verify(Algorithm::GHOSTRIDER_RTM, test_output_gr);
+        if (!allTestsPassed) {
+            LOG_ERR("Benchmark failed for Algorithm::GHOSTRIDER_RTM");
+        }
     }
 #   endif
 
     if (m_algorithm.family() == Algorithm::CN) {
-        const bool rc = verify(Algorithm::CN_0,      test_output_v0)   &&
-                        verify(Algorithm::CN_1,      test_output_v1)   &&
-                        verify(Algorithm::CN_2,      test_output_v2)   &&
-                        verify(Algorithm::CN_FAST,   test_output_msr)  &&
-                        verify(Algorithm::CN_XAO,    test_output_xao)  &&
-                        verify(Algorithm::CN_RTO,    test_output_rto)  &&
-                        verify(Algorithm::CN_HALF,   test_output_half) &&
-                        verify2(Algorithm::CN_R,     test_output_r)    &&
-                        verify(Algorithm::CN_RWZ,    test_output_rwz)  &&
-                        verify(Algorithm::CN_ZLS,    test_output_zls)  &&
-                        verify(Algorithm::CN_CCX,    test_output_ccx)  &&
-                        verify(Algorithm::CN_DOUBLE, test_output_double)
-#                       ifdef XMRIG_ALGO_CN_GPU
-                        &&
-                        verify(Algorithm::CN_GPU,    test_output_gpu)
-#                       endif
-                        ;
-
-#       ifdef XMRIG_ALGO_CN_GPU
-        if (! (!rc || N > 1)) {
-            return verify(Algorithm::CN_GPU, test_output_gpu);
-        } else
-#       endif
-        return rc;
+        try {
+            allTestsPassed &= verify(Algorithm::CN_0,      test_output_v0);
+            allTestsPassed &= verify(Algorithm::CN_1,      test_output_v1);
+            allTestsPassed &= verify(Algorithm::CN_2,      test_output_v2);
+            allTestsPassed &= verify(Algorithm::CN_FAST,   test_output_msr);
+            allTestsPassed &= verify(Algorithm::CN_XAO,    test_output_xao);
+            allTestsPassed &= verify(Algorithm::CN_RTO,    test_output_rto);
+            allTestsPassed &= verify(Algorithm::CN_HALF,   test_output_half);
+            allTestsPassed &= verify2(Algorithm::CN_R,     test_output_r);
+            allTestsPassed &= verify(Algorithm::CN_RWZ,    test_output_rwz);
+            allTestsPassed &= verify(Algorithm::CN_ZLS,    test_output_zls);
+            allTestsPassed &= verify(Algorithm::CN_CCX,    test_output_ccx);
+            allTestsPassed &= verify(Algorithm::CN_DOUBLE, test_output_double);
+#           ifdef XMRIG_ALGO_CN_GPU                        
+            allTestsPassed &= verify(Algorithm::CN_GPU,    test_output_gpu);
+#           endif
+        } catch (const std::exception& e) {
+            LOG_ERR("Benchmark failed for Algorithm::CN family: %s", e.what());
+            allTestsPassed = false;
+        }
     }
 
 #   ifdef XMRIG_ALGO_CN_LITE
     if (m_algorithm.family() == Algorithm::CN_LITE) {
-        return verify(Algorithm::CN_LITE_0,    test_output_v0_lite) &&
-               verify(Algorithm::CN_LITE_1,    test_output_v1_lite);
+        try {
+            allTestsPassed &= verify(Algorithm::CN_LITE_0,    test_output_v0_lite);
+            allTestsPassed &= verify(Algorithm::CN_LITE_1,    test_output_v1_lite);
+        } catch (const std::exception& e) {
+            LOG_ERR("Benchmark failed for Algorithm::CN_LITE family: %s", e.what());
+            allTestsPassed = false;
+        }
     }
 #   endif
 
 #   ifdef XMRIG_ALGO_CN_HEAVY
     if (m_algorithm.family() == Algorithm::CN_HEAVY) {
-        return verify(Algorithm::CN_HEAVY_0,    test_output_v0_heavy)  &&
-               verify(Algorithm::CN_HEAVY_XHV,  test_output_xhv_heavy) &&
-               verify(Algorithm::CN_HEAVY_TUBE, test_output_tube_heavy);
+        try {
+            allTestsPassed &= verify(Algorithm::CN_HEAVY_0,    test_output_v0_heavy); 
+            allTestsPassed &= verify(Algorithm::CN_HEAVY_XHV,  test_output_xhv_heavy);
+            allTestsPassed &= verify(Algorithm::CN_HEAVY_TUBE, test_output_tube_heavy);
+        } catch (const std::exception& e) {
+            LOG_ERR("Benchmark failed for Algorithm::CN_HEAVY family: %s", e.what());
+            allTestsPassed = false;
+        }
     }
 #   endif
 
 #   ifdef XMRIG_ALGO_CN_PICO
     if (m_algorithm.family() == Algorithm::CN_PICO) {
-        return verify(Algorithm::CN_PICO_0, test_output_pico_trtl) &&
-               verify(Algorithm::CN_PICO_TLO, test_output_pico_tlo);
+        try {
+            allTestsPassed &= verify(Algorithm::CN_PICO_0, test_output_pico_trtl);
+            allTestsPassed &= verify(Algorithm::CN_PICO_TLO, test_output_pico_tlo);
+        } catch (const std::exception& e) {
+            LOG_ERR("Benchmark failed for Algorithm::CN_PICO family: %s", e.what());
+            allTestsPassed = false;
+        }
     }
 #   endif
 
 #   ifdef XMRIG_ALGO_CN_FEMTO
     if (m_algorithm.family() == Algorithm::CN_FEMTO) {
-        return verify(Algorithm::CN_UPX2, test_output_femto_upx2);
+        try {
+            allTestsPassed &= verify(Algorithm::CN_UPX2, test_output_femto_upx2);
+        } catch (const std::exception& e) {
+            LOG_ERR("Benchmark failed for Algorithm::CN_FEMTO family: %s", e.what());
+            allTestsPassed = false;
+        }
     }
 #   endif
 
 #   ifdef XMRIG_ALGO_ARGON2
     if (m_algorithm.family() == Algorithm::ARGON2) {
-        return verify(Algorithm::AR2_CHUKWA, argon2_chukwa_test_out) &&
-               verify(Algorithm::AR2_CHUKWA_V2, argon2_chukwa_v2_test_out) &&
-               verify(Algorithm::AR2_WRKZ, argon2_wrkz_test_out);
+        try {
+            allTestsPassed &= verify(Algorithm::AR2_CHUKWA, argon2_chukwa_test_out);
+            allTestsPassed &= verify(Algorithm::AR2_CHUKWA_V2, argon2_chukwa_v2_test_out);
+            allTestsPassed &= verify(Algorithm::AR2_WRKZ, argon2_wrkz_test_out);
+        } catch (const std::exception& e) {
+            LOG_ERR("Benchmark failed for Algorithm::ARGON2 family: %s", e.what());
+            allTestsPassed = false;
+        }
     }
 #   endif
 
-    return false;
+    return allTestsPassed;
 }
 
 
@@ -547,4 +573,3 @@ template class CpuWorker<5>;
 template class CpuWorker<8>;
 
 } // namespace xmrig
-
